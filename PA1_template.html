@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+<title>Reproducible Research</title>
+
+<script type="text/javascript">
+window.onload = function() {
+  var imgs = document.getElementsByTagName('img'), i, img;
+  for (i = 0; i < imgs.length; i++) {
+    img = imgs[i];
+    // center an image if it is the only element of its parent
+    if (img.parentElement.childElementCount === 1)
+      img.parentElement.style.textAlign = 'center';
+  }
+};
+</script>
+
+
+
+
+
+<style type="text/css">
+body, td {
+   font-family: sans-serif;
+   background-color: white;
+   font-size: 13px;
+}
+
+body {
+  max-width: 800px;
+  margin: auto;
+  padding: 1em;
+  line-height: 20px;
+}
+
+tt, code, pre {
+   font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace;
+}
+
+h1 {
+   font-size:2.2em;
+}
+
+h2 {
+   font-size:1.8em;
+}
+
+h3 {
+   font-size:1.4em;
+}
+
+h4 {
+   font-size:1.0em;
+}
+
+h5 {
+   font-size:0.9em;
+}
+
+h6 {
+   font-size:0.8em;
+}
+
+a:visited {
+   color: rgb(50%, 0%, 50%);
+}
+
+pre, img {
+  max-width: 100%;
+}
+pre {
+  overflow-x: auto;
+}
+pre code {
+   display: block; padding: 0.5em;
+}
+
+code {
+  font-size: 92%;
+  border: 1px solid #ccc;
+}
+
+code[class] {
+  background-color: #F8F8F8;
+}
+
+table, td, th {
+  border: none;
+}
+
+blockquote {
+   color:#666666;
+   margin:0;
+   padding-left: 1em;
+   border-left: 0.5em #EEE solid;
+}
+
+hr {
+   height: 0px;
+   border-bottom: none;
+   border-top-width: thin;
+   border-top-style: dotted;
+   border-top-color: #999999;
+}
+
+@media print {
+   * {
+      background: transparent !important;
+      color: black !important;
+      filter:none !important;
+      -ms-filter: none !important;
+   }
+
+   body {
+      font-size:12pt;
+      max-width:100%;
+   }
+
+   a, a:visited {
+      text-decoration: underline;
+   }
+
+   hr {
+      visibility: hidden;
+      page-break-before: always;
+   }
+
+   pre, blockquote {
+      padding-right: 1em;
+      page-break-inside: avoid;
+   }
+
+   tr, img {
+      page-break-inside: avoid;
+   }
+
+   img {
+      max-width: 100% !important;
+   }
+
+   @page :left {
+      margin: 15mm 20mm 15mm 10mm;
+   }
+
+   @page :right {
+      margin: 15mm 10mm 15mm 20mm;
+   }
+
+   p, h2, h3 {
+      orphans: 3; widows: 3;
+   }
+
+   h2, h3 {
+      page-break-after: avoid;
+   }
+}
+</style>
+
+
+
+</head>
+
+<body>
+<h2>Reproducible Research</h2>
+
+<p>library(dplyr)
+library(ggplot2)
+library(scales)
+library(Hmisc)</p>
+
+<h2>01. Code for reading in the dataset and/or processing the data</h2>
+
+<p>data_activity&lt;-read.csv(&ldquo;activity.csv&rdquo;)</p>
+
+<p>data_activity$date&lt;-as.Date(as.character(data_activity$date))</p>
+
+<h2>group step by date</h2>
+
+<p>data_step &lt;- tapply(data_activity$steps, data_activity$date, sum, na.rm=TRUE)</p>
+
+<h2>02. Histogram of the total number of steps taken each day</h2>
+
+<p>png(&ldquo;1.Histogram.png&rdquo;, width=480, height=480)</p>
+
+<p>qplot(data_step, xlab=&#39;Summary Steps per Day&#39;, ylab=&#39;Frequency&#39;, binwidth=500,main=&ldquo;The total number of steps taken each day&rdquo;,col=&ldquo;red&rdquo;)</p>
+
+<p>dev.off()</p>
+
+<h2>03. group step by date mean &amp; median</h2>
+
+<p>data_step_mean &lt;- mean(data_step)</p>
+
+<p>data_step_median &lt;- median(data_step)</p>
+
+<h2>04. Time series plot of the average number of steps taken</h2>
+
+<p>avgstep &lt;- aggregate(x=list(meanSteps=data_activity$steps), by=list(interval=data_activity$interval), FUN=mean, na.rm=TRUE)</p>
+
+<p>png(&ldquo;2.Interval.png&rdquo;, width=480, height=480)</p>
+
+<p>ggplot(data=avgstep, aes(x=interval, y=meanSteps)) + geom_line() + xlab(&ldquo;Interval 5 Minute&rdquo;) + ylab(&ldquo;Average Number of Steps Taken&rdquo;)</p>
+
+<p>dev.off()</p>
+
+<h2>05. The 5-minute interval that, on average, contains the maximum number of steps</h2>
+
+<p>numstep &lt;- which.max(avgstep$meanSteps)</p>
+
+<p>timestep &lt;-  gsub(&ldquo;([0-9]{1,2})([0-9]{2})&rdquo;, &ldquo;\1:\2&rdquo;, avgstep[numstep,&#39;interval&#39;])</p>
+
+<h2>06. Code to describe and show a strategy for imputing missing data</h2>
+
+<p>missval &lt;- length(which(is.na(data_activity$steps)))</p>
+
+<p>dat_imp &lt;- data_activity</p>
+
+<p>dat_imp$steps &lt;- impute(data_activity$steps, fun=mean)</p>
+
+<h2>07. Histogram of the total number of steps taken each day after missing values are imputed</h2>
+
+<p>stepimp &lt;- tapply(dat_imp$steps, dat_imp$date, sum)</p>
+
+<p>png(&ldquo;3.Histogram imputed.png&rdquo;, width=480, height=480)</p>
+
+<p>qplot(stepimp, xlab=&#39;Steps per Day Imputed&#39;, ylab=&#39;Frequency&#39;, binwidth=500,main=&ldquo;The total number of steps taken each day after missing values are imputed&rdquo;,col=&ldquo;red&rdquo;)</p>
+
+<p>dev.off()</p>
+
+<h2>08. Panel plot comparing the average number of steps taken per 5-minute interval across weekdays and weekends</h2>
+
+<p>dat_imp$dateType &lt;-  ifelse(as.POSIXlt(dat_imp$date)$wday %in% c(0,6), &#39;Weekend&#39;, &#39;Weekday&#39;)</p>
+
+<p>png(&ldquo;4.Interval imputed.png&rdquo;, width=480, height=480)</p>
+
+<p>avg_dat_imp &lt;- aggregate(steps ~ interval + dateType, data=dat_imp, mean)</p>
+
+<p>ggplot(avg_dat_imp, aes(interval, steps)) + geom_line() + facet_grid(dateType ~ .) + xlab(&ldquo;Interval 5 Minute&rdquo;) + ylab(&ldquo;Average Number of Steps&rdquo;)</p>
+
+<p>dev.off()</p>
+
+</body>
+
+</html>
